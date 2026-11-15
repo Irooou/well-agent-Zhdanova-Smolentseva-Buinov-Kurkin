@@ -37,7 +37,7 @@ LLM -> Pydantic (валидация) -> MCP-Клиент -> MCP-Сервер -> 
 
 ## Ссылки на документацию
 - [Постановка задачи](doc/постановка.md)
-- [Архитектура](docs/architecture.md) 
+- [Архитектура](doc/architecture.md) 
 - [Словарь данных](docs/data_dictionary.md) 
 
 ## Текущий статус
