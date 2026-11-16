@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+.venv/
+.env
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Данные и модели (если они большие, их не хранят в Git)
+*.x1sx
+*.xlsx
+*.csv
+
+# Секреты и ключи
+secrets.json
+*.key
+*.pem
+
+# Системные файлы
+.DS_Store
+Thumbs.db
