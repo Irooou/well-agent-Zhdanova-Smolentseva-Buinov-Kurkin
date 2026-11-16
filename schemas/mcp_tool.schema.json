@@ -1,0 +1,51 @@
+
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mcp_tool.schema.json",
+  "title": "MCP Tool",
+  "description": "Структура описания инструмента, получаемого MCP-клиентом от MCP-сервера.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Уникальное имя MCP-инструмента."
+    },
+    "description": {
+      "type": "string",
+      "description": "Описание назначения инструмента."
+    },
+    "input_schema": {
+      "type": "object",
+      "description": "JSON Schema входных аргументов инструмента.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "object"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "properties"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "input_schema"
+  ],
+  "additionalProperties": true
+}
