@@ -1,0 +1,5 @@
+# Зависимости проекта
+# pydantic
+# fastmcp
+# langgraph
+# openai
