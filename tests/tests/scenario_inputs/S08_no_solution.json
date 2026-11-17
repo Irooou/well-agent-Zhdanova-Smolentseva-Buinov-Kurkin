@@ -1,0 +1,53 @@
+{
+  "scenario_id": "S08",
+  "name": "Отсутствие решения при расчёте",
+  "uses_test_adapter": true,
+  "adapter": {
+    "mode": "no_solution"
+  },
+  "steps": [
+    {
+      "request": {
+        "request_id": "REQ-S08-NOSOL-001",
+        "description": "Корректный запрос (числа иллюстративные)",
+        "task_type": "run_experiment",
+        "model_id": "исходная_модель",
+        "experiment": {
+          "type": "CCE",
+          "stream": "Stream1",
+          "parameters": {
+            "temperature": {
+              "value": 93.3,
+              "unit": "degC"
+            },
+            "pressure_steps": [
+              {
+                "value": 350.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 300.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 250.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 200.0,
+                "unit": "BARa"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "status": "NO_SOLUTION",
+        "error_code": "NO_SOLUTION",
+        "mcp_tool_called": true,
+        "calc_status": "FAILED",
+        "results": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "request_id": "REQ-ERR-UNIT-001",
+  "trace_id": "trc-пример",
+  "status": "REJECTED",
+  "calc_status": "NOT_RUN",
+  "check_status": "NOT_ASSESSED",
+  "error_code": "UNIT_INVALID",
+  "field": "experiment.parameters.temperature.unit",
+  "reason": "«psig» — единица давления, а поле ожидает величину температуры (не та размерность).",
+  "errors": [
+    {
+      "code": "UNIT_INVALID",
+      "field": "experiment.parameters.temperature.unit",
+      "reason": "«psig» — единица давления, а поле ожидает величину температуры (не та размерность).",
+      "received": "psig",
+      "expected": "degC, °C, degF, °F, K",
+      "source": "запрос пользователя"
+    }
+  ],
+  "warnings": [],
+  "user_message": "Запрос отклонён — расчёт не запускался.\n1) [UNIT_INVALID] experiment.parameters.temperature.unit: «psig» — единица давления, а поле ожидает величину температуры (не та размерность). Ожидается: degC, °C, degF, °F, K.\nЗначения не подставлялись автоматически; MCP-инструмент и ПО не вызывались.",
+  "mcp_tool_called": false,
+  "mcp_tool": null,
+  "attempts": 0,
+  "change_plan": null,
+  "results": null,
+  "uses_test_adapter": true
+}

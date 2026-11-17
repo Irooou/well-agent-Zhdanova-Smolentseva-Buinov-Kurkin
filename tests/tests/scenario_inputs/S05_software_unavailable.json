@@ -1,0 +1,53 @@
+{
+  "scenario_id": "S05",
+  "name": "Недоступность расчётного ПО",
+  "uses_test_adapter": true,
+  "adapter": {
+    "mode": "unavailable"
+  },
+  "steps": [
+    {
+      "request": {
+        "request_id": "REQ-S05-NOSW-001",
+        "description": "Корректный запрос (числа иллюстративные)",
+        "task_type": "run_experiment",
+        "model_id": "исходная_модель",
+        "experiment": {
+          "type": "CCE",
+          "stream": "Stream1",
+          "parameters": {
+            "temperature": {
+              "value": 93.3,
+              "unit": "degC"
+            },
+            "pressure_steps": [
+              {
+                "value": 350.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 300.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 250.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 200.0,
+                "unit": "BARa"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "status": "SOFTWARE_UNAVAILABLE",
+        "error_code": "SOFTWARE_UNAVAILABLE",
+        "mcp_tool_called": true,
+        "calc_status": "NOT_RUN",
+        "results": null
+      }
+    }
+  ]
+}

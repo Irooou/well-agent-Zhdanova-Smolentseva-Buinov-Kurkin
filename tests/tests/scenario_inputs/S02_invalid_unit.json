@@ -1,0 +1,20 @@
+{
+  "scenario_id": "S02",
+  "name": "Некорректная единица измерения",
+  "uses_test_adapter": false,
+  "adapter": {
+    "mode": "ok"
+  },
+  "steps": [
+    {
+      "request_file": "examples/errors/invalid_unit.json",
+      "expected": {
+        "status": "REJECTED",
+        "error_code": "UNIT_INVALID",
+        "field": "experiment.parameters.temperature.unit",
+        "mcp_tool_called": false,
+        "calc_status": "NOT_RUN"
+      }
+    }
+  ]
+}

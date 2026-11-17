@@ -1,0 +1,52 @@
+{
+  "scenario_id": "S04",
+  "name": "Неоднозначность входных данных",
+  "uses_test_adapter": false,
+  "adapter": {
+    "mode": "ok"
+  },
+  "steps": [
+    {
+      "request": {
+        "request_id": "REQ-S04-AMB-001",
+        "description": "Давление 350 bar — не указано, абсолютное или избыточное",
+        "task_type": "run_experiment",
+        "model_id": "исходная_модель",
+        "experiment": {
+          "type": "CCE",
+          "stream": "Stream1",
+          "parameters": {
+            "temperature": {
+              "value": 93.3,
+              "unit": "degC"
+            },
+            "pressure_steps": [
+              {
+                "value": 350.0,
+                "unit": "bar"
+              },
+              {
+                "value": 300.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 250.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 200.0,
+                "unit": "BARa"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "status": "NEEDS_CLARIFICATION",
+        "error_code": "UNIT_AMBIGUOUS",
+        "field": "experiment.parameters.pressure_steps[0].unit",
+        "mcp_tool_called": false
+      }
+    }
+  ]
+}

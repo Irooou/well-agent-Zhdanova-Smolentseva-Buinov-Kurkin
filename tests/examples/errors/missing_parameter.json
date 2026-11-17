@@ -1,0 +1,30 @@
+{
+  "request_id": "REQ-ERR-MISSING-001",
+  "description": "Пример: нет обязательного параметра — температуры эксперимента CCE. Числа иллюстративные.",
+  "task_type": "run_experiment",
+  "model_id": "исходная_модель",
+  "experiment": {
+    "type": "CCE",
+    "stream": "Stream1",
+    "parameters": {
+      "pressure_steps": [
+        {
+          "value": 350.0,
+          "unit": "BARa"
+        },
+        {
+          "value": 300.0,
+          "unit": "BARa"
+        },
+        {
+          "value": 250.0,
+          "unit": "BARa"
+        },
+        {
+          "value": 200.0,
+          "unit": "BARa"
+        }
+      ]
+    }
+  }
+}

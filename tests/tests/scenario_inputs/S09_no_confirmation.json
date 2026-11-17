@@ -1,0 +1,69 @@
+{
+  "scenario_id": "S09",
+  "name": "Отсутствие подтверждения на изменение модели",
+  "uses_test_adapter": true,
+  "adapter": {
+    "mode": "ok"
+  },
+  "steps": [
+    {
+      "request": {
+        "request_id": "REQ-S09-CONF-001",
+        "description": "Изменение параметров модели (числа иллюстративные)",
+        "task_type": "apply_model_changes",
+        "model_id": "исходная_модель",
+        "changes": [
+          {
+            "parameter": "BIC",
+            "i": 0,
+            "j": 5,
+            "new_value": 0.012
+          },
+          {
+            "parameter": "VOLUME_SHIFT",
+            "component_index": 3,
+            "new_value": -0.05
+          }
+        ]
+      },
+      "expected": {
+        "status": "CONFIRMATION_REQUIRED",
+        "error_code": "CONFIRMATION_REQUIRED",
+        "field": "confirmation",
+        "mcp_tool_called": false,
+        "adapter_write_calls": 0
+      }
+    },
+    {
+      "request": {
+        "request_id": "REQ-S09-CONF-002",
+        "description": "Изменение параметров модели (числа иллюстративные)",
+        "task_type": "apply_model_changes",
+        "model_id": "исходная_модель",
+        "changes": [
+          {
+            "parameter": "BIC",
+            "i": 0,
+            "j": 5,
+            "new_value": 0.012
+          },
+          {
+            "parameter": "VOLUME_SHIFT",
+            "component_index": 3,
+            "new_value": -0.05
+          }
+        ],
+        "confirmation": {
+          "plan_id": "<из шага 1>",
+          "confirmed": false
+        }
+      },
+      "expected": {
+        "status": "REJECTED",
+        "error_code": "CONFIRMATION_DECLINED",
+        "mcp_tool_called": false,
+        "adapter_write_calls": 0
+      }
+    }
+  ]
+}

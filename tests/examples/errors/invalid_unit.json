@@ -1,0 +1,34 @@
+{
+  "request_id": "REQ-ERR-UNIT-001",
+  "description": "Пример: некорректная единица — температура задана в psig (это единица давления). Числа иллюстративные.",
+  "task_type": "run_experiment",
+  "model_id": "исходная_модель",
+  "experiment": {
+    "type": "CCE",
+    "stream": "Stream1",
+    "parameters": {
+      "temperature": {
+        "value": 200.0,
+        "unit": "psig"
+      },
+      "pressure_steps": [
+        {
+          "value": 350.0,
+          "unit": "BARa"
+        },
+        {
+          "value": 300.0,
+          "unit": "BARa"
+        },
+        {
+          "value": 250.0,
+          "unit": "BARa"
+        },
+        {
+          "value": 200.0,
+          "unit": "BARa"
+        }
+      ]
+    }
+  }
+}

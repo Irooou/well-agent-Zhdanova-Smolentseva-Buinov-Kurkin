@@ -1,0 +1,28 @@
+{
+  "request_id": "REQ-ERR-MISSING-001",
+  "trace_id": "trc-пример",
+  "status": "NEEDS_CLARIFICATION",
+  "calc_status": "NOT_RUN",
+  "check_status": "NOT_ASSESSED",
+  "error_code": "MISSING_REQUIRED_FIELD",
+  "field": "experiment.parameters.temperature",
+  "reason": "Для эксперимента CCE обязателен параметр «temperature»; значение не подставляется.",
+  "errors": [
+    {
+      "code": "MISSING_REQUIRED_FIELD",
+      "field": "experiment.parameters.temperature",
+      "reason": "Для эксперимента CCE обязателен параметр «temperature»; значение не подставляется.",
+      "received": null,
+      "expected": "{\"value\": <число>, \"unit\": \"degC|degF|K\"}",
+      "source": "запрос пользователя"
+    }
+  ],
+  "warnings": [],
+  "user_message": "Нужно уточнение — расчёт не запускался.\n1) [MISSING_REQUIRED_FIELD] experiment.parameters.temperature: Для эксперимента CCE обязателен параметр «temperature»; значение не подставляется. Ожидается: {\"value\": <число>, \"unit\": \"degC|degF|K\"}.\nЗначения не подставлялись автоматически; MCP-инструмент и ПО не вызывались.",
+  "mcp_tool_called": false,
+  "mcp_tool": null,
+  "attempts": 0,
+  "change_plan": null,
+  "results": null,
+  "uses_test_adapter": true
+}

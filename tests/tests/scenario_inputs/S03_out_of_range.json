@@ -1,0 +1,20 @@
+{
+  "scenario_id": "S03",
+  "name": "Выход значения за допустимый диапазон",
+  "uses_test_adapter": false,
+  "adapter": {
+    "mode": "ok"
+  },
+  "steps": [
+    {
+      "request_file": "examples/errors/out_of_range.json",
+      "expected": {
+        "status": "REJECTED",
+        "error_code": "OUT_OF_RANGE",
+        "field": "experiment.parameters.temperature.value",
+        "mcp_tool_called": false,
+        "calc_status": "NOT_RUN"
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "scenario_id": "S07",
+  "name": "Превышение времени выполнения",
+  "uses_test_adapter": true,
+  "adapter": {
+    "mode": "timeout",
+    "delay_s": 1.0,
+    "timeout_s": 0.2
+  },
+  "steps": [
+    {
+      "request": {
+        "request_id": "REQ-S07-TMO-001",
+        "description": "Корректный запрос (числа иллюстративные)",
+        "task_type": "run_experiment",
+        "model_id": "исходная_модель",
+        "experiment": {
+          "type": "CCE",
+          "stream": "Stream1",
+          "parameters": {
+            "temperature": {
+              "value": 93.3,
+              "unit": "degC"
+            },
+            "pressure_steps": [
+              {
+                "value": 350.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 300.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 250.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 200.0,
+                "unit": "BARa"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "status": "TIMEOUT",
+        "error_code": "TIMEOUT",
+        "mcp_tool_called": true,
+        "calc_status": "FAILED",
+        "results": null
+      }
+    }
+  ]
+}

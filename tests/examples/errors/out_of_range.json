@@ -1,0 +1,34 @@
+{
+  "request_id": "REQ-ERR-RANGE-001",
+  "description": "Пример: значение вне допустимого диапазона — температура 400 °C при рабочем диапазоне [-60; 250] °C (диапазон NOT_CONFIRMED). Числа иллюстративные.",
+  "task_type": "run_experiment",
+  "model_id": "исходная_модель",
+  "experiment": {
+    "type": "CCE",
+    "stream": "Stream1",
+    "parameters": {
+      "temperature": {
+        "value": 400.0,
+        "unit": "degC"
+      },
+      "pressure_steps": [
+        {
+          "value": 350.0,
+          "unit": "BARa"
+        },
+        {
+          "value": 300.0,
+          "unit": "BARa"
+        },
+        {
+          "value": 250.0,
+          "unit": "BARa"
+        },
+        {
+          "value": 200.0,
+          "unit": "BARa"
+        }
+      ]
+    }
+  }
+}

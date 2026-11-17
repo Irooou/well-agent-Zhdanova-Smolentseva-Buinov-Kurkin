@@ -1,0 +1,20 @@
+{
+  "scenario_id": "S01",
+  "name": "Отсутствие обязательного параметра",
+  "uses_test_adapter": false,
+  "adapter": {
+    "mode": "ok"
+  },
+  "steps": [
+    {
+      "request_file": "examples/errors/missing_parameter.json",
+      "expected": {
+        "status": "NEEDS_CLARIFICATION",
+        "error_code": "MISSING_REQUIRED_FIELD",
+        "field": "experiment.parameters.temperature",
+        "mcp_tool_called": false,
+        "calc_status": "NOT_RUN"
+      }
+    }
+  ]
+}

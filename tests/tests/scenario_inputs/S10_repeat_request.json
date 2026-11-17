@@ -1,0 +1,135 @@
+{
+  "scenario_id": "S10",
+  "name": "Повторная отправка запроса",
+  "uses_test_adapter": true,
+  "adapter": {
+    "mode": "ok"
+  },
+  "steps": [
+    {
+      "request": {
+        "request_id": "REQ-S10-DUP-001",
+        "description": "Корректный запрос (числа иллюстративные)",
+        "task_type": "run_experiment",
+        "model_id": "исходная_модель",
+        "experiment": {
+          "type": "CCE",
+          "stream": "Stream1",
+          "parameters": {
+            "temperature": {
+              "value": 93.3,
+              "unit": "degC"
+            },
+            "pressure_steps": [
+              {
+                "value": 350.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 300.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 250.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 200.0,
+                "unit": "BARa"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "status": "SUCCESS",
+        "mcp_tool_called": true,
+        "adapter_run_calls": 1
+      }
+    },
+    {
+      "request": {
+        "request_id": "REQ-S10-DUP-001",
+        "description": "Корректный запрос (числа иллюстративные)",
+        "task_type": "run_experiment",
+        "model_id": "исходная_модель",
+        "experiment": {
+          "type": "CCE",
+          "stream": "Stream1",
+          "parameters": {
+            "temperature": {
+              "value": 93.3,
+              "unit": "degC"
+            },
+            "pressure_steps": [
+              {
+                "value": 350.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 300.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 250.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 200.0,
+                "unit": "BARa"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "status": "DUPLICATE_REQUEST",
+        "error_code": "DUPLICATE_REQUEST",
+        "mcp_tool_called": false,
+        "adapter_run_calls": 1
+      }
+    },
+    {
+      "request": {
+        "request_id": "REQ-S10-DUP-001",
+        "description": "Корректный запрос (числа иллюстративные)",
+        "task_type": "run_experiment",
+        "model_id": "исходная_модель",
+        "experiment": {
+          "type": "CCE",
+          "stream": "Stream1",
+          "parameters": {
+            "temperature": {
+              "value": 80.0,
+              "unit": "degC"
+            },
+            "pressure_steps": [
+              {
+                "value": 350.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 300.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 250.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 200.0,
+                "unit": "BARa"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "status": "REJECTED",
+        "error_code": "REQUEST_ID_CONFLICT",
+        "mcp_tool_called": false,
+        "adapter_run_calls": 1
+      }
+    }
+  ]
+}

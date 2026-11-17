@@ -1,0 +1,28 @@
+{
+  "request_id": "REQ-ERR-RANGE-001",
+  "trace_id": "trc-пример",
+  "status": "REJECTED",
+  "calc_status": "NOT_RUN",
+  "check_status": "NOT_ASSESSED",
+  "error_code": "OUT_OF_RANGE",
+  "field": "experiment.parameters.temperature.value",
+  "reason": "400.0 degC вне допустимого диапазона [-60.0; 250.0] °C.",
+  "errors": [
+    {
+      "code": "OUT_OF_RANGE",
+      "field": "experiment.parameters.temperature.value",
+      "reason": "400.0 degC вне допустимого диапазона [-60.0; 250.0] °C.",
+      "received": 400.0,
+      "expected": "[-60.0; 250.0] °C",
+      "source": "предварительный рабочий диапазон команды, требует подтверждения преподавателем (п. 4.3 ТЗ); статус NOT_CONFIRMED"
+    }
+  ],
+  "warnings": [],
+  "user_message": "Запрос отклонён — расчёт не запускался.\n1) [OUT_OF_RANGE] experiment.parameters.temperature.value: 400.0 degC вне допустимого диапазона [-60.0; 250.0] °C. Ожидается: [-60.0; 250.0] °C.\nЗначения не подставлялись автоматически; MCP-инструмент и ПО не вызывались.",
+  "mcp_tool_called": false,
+  "mcp_tool": null,
+  "attempts": 0,
+  "change_plan": null,
+  "results": null,
+  "uses_test_adapter": true
+}

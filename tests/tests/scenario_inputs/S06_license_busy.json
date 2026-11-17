@@ -1,0 +1,54 @@
+{
+  "scenario_id": "S06",
+  "name": "Занятая лицензия (ограниченный повтор)",
+  "uses_test_adapter": true,
+  "adapter": {
+    "mode": "license_busy",
+    "license_delay_s": 0.05
+  },
+  "steps": [
+    {
+      "request": {
+        "request_id": "REQ-S06-LIC-001",
+        "description": "Корректный запрос (числа иллюстративные)",
+        "task_type": "run_experiment",
+        "model_id": "исходная_модель",
+        "experiment": {
+          "type": "CCE",
+          "stream": "Stream1",
+          "parameters": {
+            "temperature": {
+              "value": 93.3,
+              "unit": "degC"
+            },
+            "pressure_steps": [
+              {
+                "value": 350.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 300.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 250.0,
+                "unit": "BARa"
+              },
+              {
+                "value": 200.0,
+                "unit": "BARa"
+              }
+            ]
+          }
+        }
+      },
+      "expected": {
+        "status": "LICENSE_BUSY",
+        "error_code": "LICENSE_BUSY",
+        "attempts": 3,
+        "mcp_tool_called": true,
+        "calc_status": "NOT_RUN"
+      }
+    }
+  ]
+}
