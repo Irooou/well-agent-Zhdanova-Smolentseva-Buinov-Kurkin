@@ -1,0 +1,482 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent_result.json",
+  "title": "AgentResult",
+  "description": "Результат работы агента. Статус расчёта и результат инженерной проверки хранятся раздельно.",
+  "type": "object",
+  "required": [
+    "request_id",
+    "trace_id",
+    "status",
+    "message"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "type": "string"
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Главный id; все записи trace имеют этот или производный trace_id"
+    },
+    "status": {
+      "type": "string",
+      "description": "Итоговый статус работы агента",
+      "enum": [
+        "SUCCESS",
+        "REJECTED",
+        "NEEDS_CLARIFICATION",
+        "NEEDS_CONFIRMATION",
+        "VALIDATION_FAILED",
+        "FAILED",
+        "NO_SOLUTION",
+        "LICENSE_BUSY",
+        "TIMEOUT",
+        "SOFTWARE_UNAVAILABLE",
+        "NOT_CONFIGURED"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "description": "Ответ пользователю; числа только из values"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Например MISSING_FIELD, UNIT_AMBIGUOUS, OUT_OF_RANGE, NO_SOLUTION, LICENSE_BUSY, TIMEOUT, INJECTION_IGNORED, WRITE_NOT_CONFIRMED"
+          },
+          "message": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "description": "Источник проблемного значения"
+          },
+          "retryable": {
+            "type": "boolean"
+          },
+          "trace_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "values": {
+      "type": "array",
+      "description": "Строки таблицы результатов",
+      "items": {
+        "type": "object",
+        "required": [
+          "case_id",
+          "metric",
+          "unit",
+          "calc_status",
+          "check_status",
+          "trace_id"
+        ],
+        "properties": {
+          "case_id": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": "string"
+          },
+          "model_version": {
+            "type": "string",
+            "description": "original | adapted | teacher_reference + sha256"
+          },
+          "input_conditions": {
+            "type": "object",
+            "description": "Температура, давление, стадия, эксперимент"
+          },
+          "metric": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "reference": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "calc": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "error_type": {
+            "type": "string",
+            "enum": [
+              "absolute",
+              "relative_percent",
+              "percentage_points"
+            ]
+          },
+          "tolerance": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "calc_status": {
+            "type": "string",
+            "enum": [
+              "SUCCESS",
+              "FAILED",
+              "NO_SOLUTION",
+              "LICENSE_BUSY",
+              "TIMEOUT",
+              "SOFTWARE_UNAVAILABLE",
+              "NOT_CONFIGURED"
+            ]
+          },
+          "check_status": {
+            "type": "string",
+            "enum": [
+              "OK",
+              "OUT_OF_TOLERANCE",
+              "NOT_ASSESSED"
+            ]
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "trace_id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "description": "Манифест использованных значений",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_id",
+          "file",
+          "sha256",
+          "raw_text",
+          "confirmation_status"
+        ],
+        "properties": {
+          "source_id": {
+            "type": "string"
+          },
+          "object_id": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sheet": {
+            "type": "string"
+          },
+          "cell": {
+            "type": "string"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "raw_text": {
+            "type": "string"
+          },
+          "value": {},
+          "unit": {
+            "type": "string"
+          },
+          "transform": {
+            "type": "string"
+          },
+          "confirmation_status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "unconfirmed",
+              "ambiguous",
+              "corrected"
+            ]
+          },
+          "correction": {
+            "type": "object",
+            "properties": {
+              "original": {},
+              "reason": {
+                "type": "string"
+              },
+              "confirmed_by": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "pending_confirmation": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Заполняется при NEEDS_CONFIRMATION",
+      "properties": {
+        "plan_id": {
+          "type": "string"
+        },
+        "confirmation_token": {
+          "type": "string"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "diff": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "parameter": {
+                "type": "string"
+              },
+              "old": {
+                "type": "number"
+              },
+              "new": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Доля в допуске = OK/(OK+OUT_OF_TOLERANCE); покрытие = проверено/исходных",
+      "properties": {
+        "n_source": {
+          "type": "integer"
+        },
+        "n_admitted": {
+          "type": "integer"
+        },
+        "n_checked": {
+          "type": "integer"
+        },
+        "n_ok": {
+          "type": "integer"
+        },
+        "n_out_of_tolerance": {
+          "type": "integer"
+        },
+        "n_not_assessed": {
+          "type": "integer"
+        },
+        "share_in_tolerance": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "trace": {
+      "type": "array",
+      "description": "Журнал по trace_id",
+      "items": {
+        "type": "object",
+        "required": [
+          "trace_id",
+          "step",
+          "status"
+        ],
+        "properties": {
+          "trace_id": {
+            "type": "string"
+          },
+          "parent_trace_id": {
+            "type": "string"
+          },
+          "step": {
+            "type": "string",
+            "description": "llm_parse | validate | mcp_call | adapter_call | api_call | confirm | report"
+          },
+          "tool": {
+            "type": "string"
+          },
+          "arguments": {
+            "type": "object",
+            "description": "Фактические аргументы (без ключей API)"
+          },
+          "api_call": {
+            "type": "string",
+            "description": "Например PVT.CCE[stream]"
+          },
+          "response": {},
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "duration_ms": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Temperature": {
+      "type": "object",
+      "description": "Температура с явной единицей.",
+      "required": [
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "C",
+            "F"
+          ],
+          "description": "°C или °F"
+        }
+      }
+    },
+    "Pressure": {
+      "type": "object",
+      "description": "Давление с явной шкалой. Шкалу нельзя угадывать по порядку величины.",
+      "required": [
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "BARa",
+            "psig",
+            "psia"
+          ],
+          "description": "BARa - абсолютное, бар; psig - избыточное, фунт/дюйм2; psia - абсолютное, фунт/дюйм2"
+        },
+        "atmospheric_pressure": {
+          "type": "object",
+          "description": "Обязательно для psig: подтверждённое атмосферное давление.",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "BARa",
+                "psia"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ExperimentType": {
+      "type": "string",
+      "enum": [
+        "PSAT",
+        "CCE",
+        "CVD",
+        "SEP"
+      ],
+      "description": "Тип лабораторного эксперимента"
+    },
+    "TunableParameter": {
+      "type": "string",
+      "enum": [
+        "VOLUME_SHIFT",
+        "BIC"
+      ],
+      "description": "Разрешённый к настройке параметр (подтверждает преподаватель)"
+    },
+    "ModelRef": {
+      "type": "object",
+      "description": "Ссылка на файл модели (только чтение для оригинала).",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Относительный путь, например PVT/исходная_модель.xlsx"
+        },
+        "sha256": {
+          "type": "string",
+          "description": "SHA-256 файла для контроля версии"
+        }
+      }
+    },
+    "ValidationIssue": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Например PVT-01, MISSING_FIELD, UNIT_AMBIGUOUS, OUT_OF_RANGE"
+        },
+        "field": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning"
+          ]
+        }
+      }
+    }
+  }
+}

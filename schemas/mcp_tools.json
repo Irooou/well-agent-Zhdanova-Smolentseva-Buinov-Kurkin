@@ -1,0 +1,812 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MCP-инструменты PVT-агента",
+  "version": "0.1.0",
+  "server": "mcp_server/server.py",
+  "notes": [
+    "Инструменты - проектный набор. Имена и сигнатуры сверить с mcp_server/server.py шаблона преподавателя.",
+    "Единицы: температура C|F, давление BARa|psig|psia. Конвертация выполняется в validate_units, не в LLM.",
+    "Все числа возвращает инструмент; LLM их не вычисляет.",
+    "kind=write: только apply_model_changes, и только с confirmation_token.",
+    "Каждый input_schema самодостаточен (без $ref), чтобы его можно было передать LLM как parameters. Раздел definitions оставлен как справочник."
+  ],
+  "definitions": {
+    "Temperature": {
+      "type": "object",
+      "description": "Температура с явной единицей.",
+      "required": [
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "C",
+            "F"
+          ],
+          "description": "°C или °F"
+        }
+      }
+    },
+    "Pressure": {
+      "type": "object",
+      "description": "Давление с явной шкалой. Шкалу нельзя угадывать по порядку величины.",
+      "required": [
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "BARa",
+            "psig",
+            "psia"
+          ],
+          "description": "BARa - абсолютное, бар; psig - избыточное, фунт/дюйм2; psia - абсолютное, фунт/дюйм2"
+        },
+        "atmospheric_pressure": {
+          "type": "object",
+          "description": "Обязательно для psig: подтверждённое атмосферное давление.",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "BARa",
+                "psia"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ExperimentType": {
+      "type": "string",
+      "enum": [
+        "PSAT",
+        "CCE",
+        "CVD",
+        "SEP"
+      ],
+      "description": "Тип лабораторного эксперимента"
+    },
+    "TunableParameter": {
+      "type": "string",
+      "enum": [
+        "VOLUME_SHIFT",
+        "BIC"
+      ],
+      "description": "Разрешённый к настройке параметр (подтверждает преподаватель)"
+    },
+    "ModelRef": {
+      "type": "object",
+      "description": "Ссылка на файл модели (только чтение для оригинала).",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Относительный путь, например PVT/исходная_модель.xlsx"
+        },
+        "sha256": {
+          "type": "string",
+          "description": "SHA-256 файла для контроля версии"
+        }
+      }
+    },
+    "ValidationIssue": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Например PVT-01, MISSING_FIELD, UNIT_AMBIGUOUS, OUT_OF_RANGE"
+        },
+        "field": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning"
+          ]
+        }
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "get_adapter_state",
+      "purpose": "Диагностика",
+      "description": "Проверяет, доступны ли MCP-сервер, адаптер, OpenServer и лицензия PVTP. Расчёты не запускает.",
+      "kind": "read",
+      "requires_confirmation": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "output_description": "state: ok | not_configured | software_unavailable | license_busy; версия ПО; сообщение."
+    },
+    {
+      "name": "validate_composition",
+      "purpose": "Проверка входных данных (PVT-01)",
+      "description": "Проверяет состав: 20 уникальных компонентов, исходный порядок и индексы сохранены, сумма долей согласована со 100 %, доли/проценты не перепутаны.",
+      "kind": "read",
+      "requires_confirmation": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "object",
+            "description": "Ссылка на файл модели (только чтение для оригинала).",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Относительный путь, например PVT/исходная_модель.xlsx"
+              },
+              "sha256": {
+                "type": "string",
+                "description": "SHA-256 файла для контроля версии"
+              }
+            }
+          },
+          "composition_unit": {
+            "type": "string",
+            "enum": [
+              "mol_percent",
+              "mol_fraction"
+            ],
+            "description": "Единица молярного состава: % или доли"
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [
+          "model",
+          "composition_unit"
+        ],
+        "additionalProperties": false
+      },
+      "output_description": "valid (bool); список замечаний issues; component_count; sum_percent."
+    },
+    {
+      "name": "validate_bic",
+      "purpose": "Проверка входных данных (PVT-02)",
+      "description": "Проверяет 37 пар BIC: индексы 0-19 соответствуют именам компонентов, нет конфликтующих дублей, правило для неуказанных пар задано явно. Отрицательные значения допустимы.",
+      "kind": "read",
+      "requires_confirmation": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "object",
+            "description": "Ссылка на файл модели (только чтение для оригинала).",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Относительный путь, например PVT/исходная_модель.xlsx"
+              },
+              "sha256": {
+                "type": "string",
+                "description": "SHA-256 файла для контроля версии"
+              }
+            }
+          },
+          "unspecified_pair_rule": {
+            "type": "string",
+            "enum": [
+              "zero",
+              "default_from_model",
+              "reject"
+            ],
+            "description": "Правило для пар, которых нет в таблице"
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [
+          "model",
+          "unspecified_pair_rule"
+        ],
+        "additionalProperties": false
+      },
+      "output_description": "valid (bool); issues; pair_count."
+    },
+    {
+      "name": "validate_units",
+      "purpose": "Проверка единиц (PVT-03, PVT-04)",
+      "description": "Проверяет температуру и давление условий эксперимента до вызова ПО: тип числа, конечность, физический диапазон, различимость °F/°C и psig/BARa. Для psig без атмосферного давления возвращает ошибку.",
+      "kind": "read",
+      "requires_confirmation": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "experiment": {
+            "type": "string",
+            "enum": [
+              "PSAT",
+              "CCE",
+              "CVD",
+              "SEP"
+            ],
+            "description": "Тип лабораторного эксперимента"
+          },
+          "temperature": {
+            "type": "object",
+            "description": "Температура с явной единицей.",
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "C",
+                  "F"
+                ],
+                "description": "°C или °F"
+              }
+            }
+          },
+          "pressures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Давление с явной шкалой. Шкалу нельзя угадывать по порядку величины.",
+              "required": [
+                "value",
+                "unit"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "BARa",
+                    "psig",
+                    "psia"
+                  ],
+                  "description": "BARa - абсолютное, бар; psig - избыточное, фунт/дюйм2; psia - абсолютное, фунт/дюйм2"
+                },
+                "atmospheric_pressure": {
+                  "type": "object",
+                  "description": "Обязательно для psig: подтверждённое атмосферное давление.",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "BARa",
+                        "psia"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "minItems": 1,
+            "description": "Давления стадий в исходном порядке"
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [
+          "experiment",
+          "temperature",
+          "pressures"
+        ],
+        "additionalProperties": false
+      },
+      "output_description": "valid (bool); issues; нормализованные значения: temperature_c (°C), pressures_bara (бар абс.)."
+    },
+    {
+      "name": "validate_gki_records",
+      "purpose": "Проверка ГКИ (GKI-01..GKI-04)",
+      "description": "Читает «Лист1» файла Свод ГКИ, выделяет реальные записи по ключу «скважина + дата» (52, а не 1837), сохраняет номера строк, находит дубли и пропуски. Пропуски не заполняются.",
+      "kind": "read",
+      "requires_confirmation": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Относительный путь к Свод ГКИ 3A07.xlsx"
+          },
+          "sheet": {
+            "type": "string",
+            "default": "Лист1"
+          },
+          "first_row": {
+            "type": "integer",
+            "default": 2,
+            "minimum": 1
+          },
+          "last_row": {
+            "type": "integer",
+            "default": 53,
+            "minimum": 1
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "additionalProperties": false
+      },
+      "output_description": "records_found; таблица качества по каждой записи (номер строки, скважина, дата, доступность входов, причина исключения); issues."
+    },
+    {
+      "name": "run_experiment",
+      "purpose": "Запуск эксперимента",
+      "description": "Задаёт условия в потоке PVTP и выполняет PVT.PSAT / PVT.CCE / PVT.CVD / PVT.SEP. Модель не изменяет. Статус SUCCESS означает только что ПО выполнило операцию.",
+      "kind": "read",
+      "requires_confirmation": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "object",
+            "description": "Ссылка на файл модели (только чтение для оригинала).",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Относительный путь, например PVT/исходная_модель.xlsx"
+              },
+              "sha256": {
+                "type": "string",
+                "description": "SHA-256 файла для контроля версии"
+              }
+            }
+          },
+          "stream": {
+            "type": "string",
+            "description": "Имя потока PVTP"
+          },
+          "experiment": {
+            "type": "string",
+            "enum": [
+              "PSAT",
+              "CCE",
+              "CVD",
+              "SEP"
+            ],
+            "description": "Тип лабораторного эксперимента"
+          },
+          "temperature": {
+            "type": "object",
+            "description": "Температура с явной единицей.",
+            "required": [
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "C",
+                  "F"
+                ],
+                "description": "°C или °F"
+              }
+            }
+          },
+          "pressures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Давление с явной шкалой. Шкалу нельзя угадывать по порядку величины.",
+              "required": [
+                "value",
+                "unit"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "BARa",
+                    "psig",
+                    "psia"
+                  ],
+                  "description": "BARa - абсолютное, бар; psig - избыточное, фунт/дюйм2; psia - абсолютное, фунт/дюйм2"
+                },
+                "atmospheric_pressure": {
+                  "type": "object",
+                  "description": "Обязательно для psig: подтверждённое атмосферное давление.",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "BARa",
+                        "psia"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "timeout_s": {
+            "type": "number",
+            "minimum": 1,
+            "default": 120,
+            "description": "Таймаут, секунды"
+          },
+          "max_license_retries": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 2
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [
+          "model",
+          "stream",
+          "experiment",
+          "temperature",
+          "pressures"
+        ],
+        "additionalProperties": false
+      },
+      "output_description": "run_id; calc_status (SUCCESS | NO_SOLUTION | LICENSE_BUSY | TIMEOUT | FAILED); число строк результата; trace_id."
+    },
+    {
+      "name": "get_experiment_results",
+      "purpose": "Чтение результатов",
+      "description": "Читает таблицу результата через CALC_NUM_RESULTS, CALC_COLUMN_TOTAL, CALC_COLUMN_NAME, CALC_COLUMN_UNIT, CALC_COLUMN_VALUE. Имена и единицы столбцов читаются, порядок столбцов в код не зашивается.",
+      "kind": "read",
+      "requires_confirmation": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "run_id": {
+            "type": "string"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Нужные столбцы по именам; пусто = все. Liquid Dropout и Liquid Dropout (PSAT Volume) - разные столбцы."
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "additionalProperties": false
+      },
+      "output_description": "columns: [{name, unit, values[]}] в единицах, возвращённых ПО; trace_id."
+    },
+    {
+      "name": "compute_errors",
+      "purpose": "Сравнение с эталоном",
+      "description": "Считает ошибки по заранее заданной конфигурации метрики (до округления). Абсолютная: abs(calc-ref). Относительная: 100*abs(calc-ref)/abs(ref) при ненулевом эталоне. Без утверждённого допуска возвращает NOT_ASSESSED.",
+      "kind": "read",
+      "requires_confirmation": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "run_id": {
+            "type": "string"
+          },
+          "metric_config": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "metric",
+                "unit",
+                "error_formula",
+                "reference"
+              ],
+              "properties": {
+                "metric": {
+                  "type": "string",
+                  "description": "Название метрики, например Psat, Liquid Dropout"
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Единица метрики, например BARa, %"
+                },
+                "error_formula": {
+                  "type": "string",
+                  "enum": [
+                    "absolute",
+                    "relative_percent",
+                    "percentage_points"
+                  ]
+                },
+                "reference": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "description": "Эталонные значения в единице metric.unit"
+                },
+                "abs_tolerance": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Допуск в единице метрики; null = не утверждён"
+                },
+                "rel_tolerance_percent": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "tolerance_source": {
+                  "type": "string"
+                },
+                "comparison": {
+                  "type": "string",
+                  "enum": [
+                    "<=",
+                    "<"
+                  ],
+                  "default": "<="
+                },
+                "zero_rule": {
+                  "type": "string",
+                  "description": "Правило для нулевого эталона/пропуска"
+                },
+                "dataset": {
+                  "type": "string",
+                  "enum": [
+                    "tuning",
+                    "holdout",
+                    "gki"
+                  ]
+                }
+              }
+            }
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [
+          "run_id",
+          "metric_config"
+        ],
+        "additionalProperties": false
+      },
+      "output_description": "таблица: case_id, calc, reference, unit, error, tolerance, check_status (OK | OUT_OF_TOLERANCE | NOT_ASSESSED)."
+    },
+    {
+      "name": "read_model_parameters",
+      "purpose": "Обратное чтение",
+      "description": "Читает текущие значения Volume Shift и BIC из модели. Используется до и после записи для проверки.",
+      "kind": "read",
+      "requires_confirmation": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "object",
+            "description": "Ссылка на файл модели (только чтение для оригинала).",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Относительный путь, например PVT/исходная_модель.xlsx"
+              },
+              "sha256": {
+                "type": "string",
+                "description": "SHA-256 файла для контроля версии"
+              }
+            }
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "VOLUME_SHIFT",
+                "BIC"
+              ],
+              "description": "Разрешённый к настройке параметр (подтверждает преподаватель)"
+            },
+            "minItems": 1
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [
+          "model",
+          "parameters"
+        ],
+        "additionalProperties": false
+      },
+      "output_description": "parameters: [{name, index/pair, value, unit}]; sha256 файла."
+    },
+    {
+      "name": "propose_model_changes",
+      "purpose": "Формирование плана изменений",
+      "description": "Строит план изменений (список «параметр: было -> стало») и проверяет его по разрешённому списку и границам. Ничего не записывает. Возвращает plan_id и confirmation_token.",
+      "kind": "read",
+      "requires_confirmation": false,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "object",
+            "description": "Ссылка на файл модели (только чтение для оригинала).",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Относительный путь, например PVT/исходная_модель.xlsx"
+              },
+              "sha256": {
+                "type": "string",
+                "description": "SHA-256 файла для контроля версии"
+              }
+            }
+          },
+          "changes": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "parameter",
+                "new_value"
+              ],
+              "properties": {
+                "parameter": {
+                  "type": "string",
+                  "enum": [
+                    "VOLUME_SHIFT",
+                    "BIC"
+                  ],
+                  "description": "Разрешённый к настройке параметр (подтверждает преподаватель)"
+                },
+                "component_index": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 19
+                },
+                "component_pair": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 19
+                  },
+                  "minItems": 2,
+                  "maxItems": 2
+                },
+                "new_value": {
+                  "type": "number",
+                  "description": "Новое значение; может быть отрицательным"
+                }
+              }
+            }
+          },
+          "bounds_ref": {
+            "type": "string",
+            "description": "Ссылка на список параметров и границ в конфигурации"
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [
+          "model",
+          "changes"
+        ],
+        "additionalProperties": false
+      },
+      "output_description": "plan_id; diff [{parameter, old, new, in_bounds}]; confirmation_token; expires_at; target_copy_path."
+    },
+    {
+      "name": "apply_model_changes",
+      "purpose": "Применение подтверждённых изменений",
+      "description": "Создаёт КОПИЮ модели и записывает в неё изменения из подтверждённого плана; читает значения обратно. Оригинал не меняется. Без валидного confirmation_token отказывает. Повтор того же plan_id не дублирует изменения (идемпотентность).",
+      "kind": "write",
+      "requires_confirmation": true,
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plan_id": {
+            "type": "string"
+          },
+          "confirmation_token": {
+            "type": "string",
+            "description": "Выдан propose_model_changes; подтверждён пользователем"
+          },
+          "confirmed_by": {
+            "type": "string",
+            "description": "Кто подтвердил"
+          },
+          "trace_id": {
+            "type": "string",
+            "description": "Идентификатор для связи с журналом. Если не передан, выдаёт сервер."
+          }
+        },
+        "required": [
+          "plan_id",
+          "confirmation_token"
+        ],
+        "additionalProperties": false
+      },
+      "output_description": "applied (bool); copy_path; copy_sha256; readback_matches (bool); already_applied (bool); trace_id."
+    }
+  ]
+}

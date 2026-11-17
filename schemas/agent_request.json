@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent_request.json",
+  "title": "AgentRequest",
+  "description": "Входной запрос агента: исходный текст + типизированная задача, полученная из LLM.",
+  "type": "object",
+  "required": [
+    "request_id",
+    "user_text"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "description": "Уникальный id запроса (uuid). Повтор того же id = повторная отправка."
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "user_text": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Запрос инженера на естественном языке"
+    },
+    "task": {
+      "type": "object",
+      "description": "Типизированная задача (заполняется после разбора LLM).",
+      "required": [
+        "task_type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "task_type": {
+          "type": "string",
+          "enum": [
+            "validate_inputs",
+            "run_baseline",
+            "plan_adaptation",
+            "apply_adaptation",
+            "run_holdout_validation",
+            "run_gki_comparison",
+            "explain_report_row",
+            "out_of_scope"
+          ]
+        },
+        "object_id": {
+          "type": "string",
+          "description": "Идентификатор модели/объекта"
+        },
+        "model": {
+          "$ref": "#/definitions/ModelRef"
+        },
+        "stream": {
+          "type": "string"
+        },
+        "experiments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "experiment",
+              "temperature",
+              "pressures"
+            ],
+            "properties": {
+              "experiment": {
+                "$ref": "#/definitions/ExperimentType"
+              },
+              "temperature": {
+                "$ref": "#/definitions/Temperature"
+              },
+              "pressures": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Pressure"
+                }
+              },
+              "dataset": {
+                "type": "string",
+                "enum": [
+                  "tuning",
+                  "holdout"
+                ]
+              }
+            }
+          }
+        },
+        "tunable_parameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TunableParameter"
+          }
+        },
+        "limits": {
+          "type": "object",
+          "description": "Ограничения подбора",
+          "properties": {
+            "max_iterations": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_time_s": {
+              "type": "number",
+              "minimum": 1
+            },
+            "max_failed_runs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "gki_file": {
+          "type": "string"
+        },
+        "case_id": {
+          "type": "string",
+          "description": "Для explain_report_row"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "default": true,
+          "description": "True = только план, без записи"
+        }
+      }
+    },
+    "confirmation": {
+      "type": "object",
+      "description": "Подтверждение записи пользователем",
+      "required": [
+        "plan_id",
+        "confirmed"
+      ],
+      "properties": {
+        "plan_id": {
+          "type": "string"
+        },
+        "confirmation_token": {
+          "type": "string"
+        },
+        "confirmed": {
+          "type": "boolean"
+        },
+        "confirmed_by": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Temperature": {
+      "type": "object",
+      "description": "Температура с явной единицей.",
+      "required": [
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "C",
+            "F"
+          ],
+          "description": "°C или °F"
+        }
+      }
+    },
+    "Pressure": {
+      "type": "object",
+      "description": "Давление с явной шкалой. Шкалу нельзя угадывать по порядку величины.",
+      "required": [
+        "value",
+        "unit"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "BARa",
+            "psig",
+            "psia"
+          ],
+          "description": "BARa - абсолютное, бар; psig - избыточное, фунт/дюйм2; psia - абсолютное, фунт/дюйм2"
+        },
+        "atmospheric_pressure": {
+          "type": "object",
+          "description": "Обязательно для psig: подтверждённое атмосферное давление.",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "BARa",
+                "psia"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ExperimentType": {
+      "type": "string",
+      "enum": [
+        "PSAT",
+        "CCE",
+        "CVD",
+        "SEP"
+      ],
+      "description": "Тип лабораторного эксперимента"
+    },
+    "TunableParameter": {
+      "type": "string",
+      "enum": [
+        "VOLUME_SHIFT",
+        "BIC"
+      ],
+      "description": "Разрешённый к настройке параметр (подтверждает преподаватель)"
+    },
+    "ModelRef": {
+      "type": "object",
+      "description": "Ссылка на файл модели (только чтение для оригинала).",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Относительный путь, например PVT/исходная_модель.xlsx"
+        },
+        "sha256": {
+          "type": "string",
+          "description": "SHA-256 файла для контроля версии"
+        }
+      }
+    },
+    "ValidationIssue": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "Например PVT-01, MISSING_FIELD, UNIT_AMBIGUOUS, OUT_OF_RANGE"
+        },
+        "field": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning"
+          ]
+        }
+      }
+    }
+  }
+}
