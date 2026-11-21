@@ -1,1 +1,336 @@
-Участник 3
+{
+  "request_id": "550e8400-e29b-41d4-a716-446655440001",
+  "trace_id": "trace-2026-11-21-001",
+  "status": "SUCCESS",
+  "message": "Базовый расчёт эксперимента CCE для исходной модели выполнен успешно (calc_status=SUCCESS) на 3 стадиях давления (350.0, 300.0, 250.0 BARa) при температуре 90.0 °C. Расчётные значения Liquid Dropout: 0.0 %, 4.2 %, 8.5 %; отклонения в процентных пунктах от демонстрационного эталона (0.0 %, 4.0 %, 8.0 %): 0.0, 0.2, 0.5. Инженерная оценка соответствия не выставлена (check_status=NOT_ASSESSED), так как численный допуск не утверждён; доля в допуске не определена.",
+  "errors": [],
+  "values": [
+    {
+      "case_id": "CCE-01",
+      "object_id": "pvt_initial_model",
+      "model_version": "original",
+      "input_conditions": {
+        "experiment": "CCE",
+        "stage": 1,
+        "temperature": {
+          "value": 90.0,
+          "unit": "C"
+        },
+        "pressure": {
+          "value": 350.0,
+          "unit": "BARa"
+        }
+      },
+      "metric": "Liquid Dropout",
+      "unit": "%",
+      "reference": 0.0,
+      "calc": 0.0,
+      "error": 0.0,
+      "error_type": "percentage_points",
+      "tolerance": null,
+      "calc_status": "SUCCESS",
+      "check_status": "NOT_ASSESSED",
+      "source_ids": [],
+      "trace_id": "trace-2026-11-21-001-07"
+    },
+    {
+      "case_id": "CCE-02",
+      "object_id": "pvt_initial_model",
+      "model_version": "original",
+      "input_conditions": {
+        "experiment": "CCE",
+        "stage": 2,
+        "temperature": {
+          "value": 90.0,
+          "unit": "C"
+        },
+        "pressure": {
+          "value": 300.0,
+          "unit": "BARa"
+        }
+      },
+      "metric": "Liquid Dropout",
+      "unit": "%",
+      "reference": 4.0,
+      "calc": 4.2,
+      "error": 0.2,
+      "error_type": "percentage_points",
+      "tolerance": null,
+      "calc_status": "SUCCESS",
+      "check_status": "NOT_ASSESSED",
+      "source_ids": [],
+      "trace_id": "trace-2026-11-21-001-07"
+    },
+    {
+      "case_id": "CCE-03",
+      "object_id": "pvt_initial_model",
+      "model_version": "original",
+      "input_conditions": {
+        "experiment": "CCE",
+        "stage": 3,
+        "temperature": {
+          "value": 90.0,
+          "unit": "C"
+        },
+        "pressure": {
+          "value": 250.0,
+          "unit": "BARa"
+        }
+      },
+      "metric": "Liquid Dropout",
+      "unit": "%",
+      "reference": 8.0,
+      "calc": 8.5,
+      "error": 0.5,
+      "error_type": "percentage_points",
+      "tolerance": null,
+      "calc_status": "SUCCESS",
+      "check_status": "NOT_ASSESSED",
+      "source_ids": [],
+      "trace_id": "trace-2026-11-21-001-07"
+    }
+  ],
+  "sources": [],
+  "pending_confirmation": null,
+  "summary": {
+    "n_source": 3,
+    "n_admitted": 3,
+    "n_checked": 3,
+    "n_ok": 0,
+    "n_out_of_tolerance": 0,
+    "n_not_assessed": 3,
+    "share_in_tolerance": null,
+    "coverage": 1.0
+  },
+  "trace": [
+    {
+      "trace_id": "trace-2026-11-21-001-01",
+      "parent_trace_id": "trace-2026-11-21-001",
+      "step": "llm_parse",
+      "arguments": {
+        "user_text": "Выполнить базовый расчёт эксперимента CCE для исходной модели при температуре 90 °C и давлениях 350, 300 и 250 BARa без изменения параметров модели."
+      },
+      "response": {
+        "task_type": "run_baseline",
+        "object_id": "pvt_initial_model",
+        "experiment": "CCE",
+        "dry_run": true
+      },
+      "started_at": "2026-11-21T10:00:00.000Z",
+      "duration_ms": 480,
+      "status": "SUCCESS"
+    },
+    {
+      "trace_id": "trace-2026-11-21-001-02",
+      "parent_trace_id": "trace-2026-11-21-001",
+      "step": "mcp_call",
+      "tool": "get_adapter_state",
+      "arguments": {
+        "trace_id": "trace-2026-11-21-001-02"
+      },
+      "response": {
+        "state": "ok",
+        "software": "PVTP (IPM 7.5)"
+      },
+      "started_at": "2026-11-21T10:00:00.480Z",
+      "duration_ms": 45,
+      "status": "SUCCESS"
+    },
+    {
+      "trace_id": "trace-2026-11-21-001-03",
+      "parent_trace_id": "trace-2026-11-21-001",
+      "step": "validate",
+      "tool": "validate_units",
+      "arguments": {
+        "experiment": "CCE",
+        "temperature": {
+          "value": 90.0,
+          "unit": "C"
+        },
+        "pressures": [
+          {
+            "value": 350.0,
+            "unit": "BARa"
+          },
+          {
+            "value": 300.0,
+            "unit": "BARa"
+          },
+          {
+            "value": 250.0,
+            "unit": "BARa"
+          }
+        ],
+        "trace_id": "trace-2026-11-21-001-03"
+      },
+      "response": {
+        "valid": true,
+        "issues": [],
+        "temperature_c": 90.0,
+        "pressures_bara": [350.0, 300.0, 250.0]
+      },
+      "started_at": "2026-11-21T10:00:00.525Z",
+      "duration_ms": 15,
+      "status": "SUCCESS"
+    },
+    {
+      "trace_id": "trace-2026-11-21-001-04",
+      "parent_trace_id": "trace-2026-11-21-001",
+      "step": "mcp_call",
+      "tool": "run_experiment",
+      "arguments": {
+        "model": {
+          "path": "PVT/исходная_модель.xlsx"
+        },
+        "stream": "Stream 1",
+        "experiment": "CCE",
+        "temperature": {
+          "value": 90.0,
+          "unit": "C"
+        },
+        "pressures": [
+          {
+            "value": 350.0,
+            "unit": "BARa"
+          },
+          {
+            "value": 300.0,
+            "unit": "BARa"
+          },
+          {
+            "value": 250.0,
+            "unit": "BARa"
+          }
+        ],
+        "timeout_s": 120,
+        "max_license_retries": 2,
+        "trace_id": "trace-2026-11-21-001-04"
+      },
+      "api_call": "PVT.CCE[Stream 1]",
+      "response": {
+        "run_id": "run-cce-2026-11-21-001",
+        "calc_status": "SUCCESS",
+        "num_rows": 3
+      },
+      "started_at": "2026-11-21T10:00:00.540Z",
+      "duration_ms": 1200,
+      "status": "SUCCESS"
+    },
+    {
+      "trace_id": "trace-2026-11-21-001-05",
+      "parent_trace_id": "trace-2026-11-21-001-04",
+      "step": "api_call",
+      "arguments": {
+        "stream": "Stream 1",
+        "command": "PVT.CCE[Stream 1]"
+      },
+      "api_call": "DoSet -> DoCmd PVT.CCE[Stream 1]",
+      "response": {
+        "calc_status": "SUCCESS",
+        "calc_num_results": 3
+      },
+      "started_at": "2026-11-21T10:00:00.560Z",
+      "duration_ms": 1150,
+      "status": "SUCCESS"
+    },
+    {
+      "trace_id": "trace-2026-11-21-001-06",
+      "parent_trace_id": "trace-2026-11-21-001",
+      "step": "mcp_call",
+      "tool": "get_experiment_results",
+      "arguments": {
+        "run_id": "run-cce-2026-11-21-001",
+        "columns": ["Liquid Dropout"],
+        "trace_id": "trace-2026-11-21-001-06"
+      },
+      "api_call": "DoGet CALC_NUM_RESULTS / CALC_COLUMN_NAME / CALC_COLUMN_UNIT / CALC_COLUMN_VALUE",
+      "response": {
+        "columns": [
+          {
+            "name": "Liquid Dropout",
+            "unit": "%",
+            "values": [0.0, 4.2, 8.5]
+          }
+        ]
+      },
+      "started_at": "2026-11-21T10:00:01.740Z",
+      "duration_ms": 180,
+      "status": "SUCCESS"
+    },
+    {
+      "trace_id": "trace-2026-11-21-001-07",
+      "parent_trace_id": "trace-2026-11-21-001",
+      "step": "mcp_call",
+      "tool": "compute_errors",
+      "arguments": {
+        "run_id": "run-cce-2026-11-21-001",
+        "metric_config": [
+          {
+            "metric": "Liquid Dropout",
+            "unit": "%",
+            "error_formula": "percentage_points",
+            "reference": [0.0, 4.0, 8.0],
+            "abs_tolerance": null,
+            "rel_tolerance_percent": null,
+            "tolerance_source": "not_approved",
+            "comparison": "<=",
+            "zero_rule": "absolute_difference_percentage_points",
+            "dataset": "tuning"
+          }
+        ],
+        "trace_id": "trace-2026-11-21-001-07"
+      },
+      "response": {
+        "rows": [
+          {
+            "case_id": "CCE-01",
+            "calc": 0.0,
+            "reference": 0.0,
+            "unit": "%",
+            "error": 0.0,
+            "tolerance": null,
+            "check_status": "NOT_ASSESSED"
+          },
+          {
+            "case_id": "CCE-02",
+            "calc": 4.2,
+            "reference": 4.0,
+            "unit": "%",
+            "error": 0.2,
+            "tolerance": null,
+            "check_status": "NOT_ASSESSED"
+          },
+          {
+            "case_id": "CCE-03",
+            "calc": 8.5,
+            "reference": 8.0,
+            "unit": "%",
+            "error": 0.5,
+            "tolerance": null,
+            "check_status": "NOT_ASSESSED"
+          }
+        ]
+      },
+      "started_at": "2026-11-21T10:00:01.920Z",
+      "duration_ms": 20,
+      "status": "SUCCESS"
+    },
+    {
+      "trace_id": "trace-2026-11-21-001-08",
+      "parent_trace_id": "trace-2026-11-21-001",
+      "step": "report",
+      "arguments": {
+        "request_id": "550e8400-e29b-41d4-a716-446655440001",
+        "n_cases": 3
+      },
+      "response": {
+        "status": "SUCCESS",
+        "n_not_assessed": 3,
+        "share_in_tolerance": null
+      },
+      "started_at": "2026-11-21T10:00:01.940Z",
+      "duration_ms": 10,
+      "status": "SUCCESS"
+    }
+  ]
+}
