@@ -87,7 +87,11 @@ class PVTAgent:
                  store_path: Path | str | None = None, sleep=time.sleep):
         self.adapter = adapter
         self.rules = rules or load_rules()
-        self.log_path = Path(log_path) if log_path else None
+        self.log_path = (
+            Path(log_path)
+            if log_path is not None
+            else ROOT / "logs" / "trace_log.jsonl"
+        )
         self.store_path = Path(store_path) if store_path else None
         self.sleep = sleep  # можно подменить в тестах, чтобы не ждать паузу между повторами
         self.processed: dict[str, dict] = {}

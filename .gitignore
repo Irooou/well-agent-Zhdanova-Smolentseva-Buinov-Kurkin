@@ -25,3 +25,19 @@ secrets.json
 .DS_Store
 Thumbs.db
 .idea/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# API keys
+.env
+.env.*
+!.env.example
+
+# Generated logs
+logs/*
+!logs/.gitkeep
+tests/logs/
