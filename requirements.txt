@@ -1,5 +1,8 @@
 # Зависимости проекта
-# pydantic
-# fastmcp
-# langgraph
-# openai
+mcp>=1.9,<2
+openai>=1.0,<3
+pydantic>=2.0,<3
+jsonschema>=4.0,<5
+pytest>=8.0,<10
+python-dotenv>=1.0,<2
+PyYAML>=6.0,<7
