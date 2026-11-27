@@ -2,7 +2,6 @@
 
 import asyncio
 import json
-import os
 import sys
 
 from pathlib import Path
@@ -48,7 +47,6 @@ class McpToolGateway:
             args=["-m", "mcp_server.server"],
             cwd=str(ROOT),
             env={
-                **os.environ,
                 "PVT_TEST_MODE": "1" if test_mode else "0",
             },
         )
