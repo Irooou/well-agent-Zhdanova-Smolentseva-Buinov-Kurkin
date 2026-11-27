@@ -5,8 +5,10 @@
   5 ПО недоступно          6 лицензия занята      7 таймаут               8 нет решения
   9 нет подтверждения записи                      10 повтор запроса       11 внедрённая инструкция
 
-Вызов MCP-инструмента здесь выполняется внутри процесса (класс ToolGateway): отдельный MCP-сервер
-делает участник №2. Расчётное ПО подключается через адаптер (см. adapter.py).
+Вызов MCP-инструмента выполняется через MCP-клиент
+и отдельный MCP-сервер по протоколу stdio.
+Расчётное ПО подключается через адаптер.
+В текущей версии используется TEST_ADAPTER.
 """
 
 from __future__ import annotations
@@ -87,7 +89,11 @@ class PVTAgent:
                  store_path: Path | str | None = None, sleep=time.sleep):
         self.adapter = adapter
         self.rules = rules or load_rules()
-        self.log_path = Path(log_path) if log_path else None
+        self.log_path = (
+            Path(log_path)
+            if log_path is not None
+            else ROOT / "logs" / "trace_log.jsonl"
+        )
         self.store_path = Path(store_path) if store_path else None
         self.sleep = sleep  # можно подменить в тестах, чтобы не ждать паузу между повторами
         self.processed: dict[str, dict] = {}
@@ -149,13 +155,33 @@ class PVTAgent:
 
     # ================================================================== сценарии
     def _run_experiment(self, request, norm, res, trace):
-        self._call_tool("run_experiment", {"model_id": request["model_id"], **norm},
-                        lambda: self.adapter.run_experiment(request["model_id"], norm), res, trace)
+        self._call_tool(
+            "run_experiment",
+            {"model_id": request["model_id"], **norm},
+            lambda: self.adapter.run_experiment(
+                request["model_id"], norm
+            ),
+            res,
+            trace,
+        )
+
         if res.status == Status.SUCCESS:
-            res.user_message = (f"Эксперимент {norm['type']} выполнен (поток {norm['stream']}). "
-                                "Инженерная оценка точности не выполнялась: допуск не утверждён (NOT_ASSESSED).")
             if res.uses_test_adapter:
-                res.user_message += " Внимание: использован ТЕСТОВЫЙ адаптер, это не расчёт PVTP."
+                res.calc_status = CalcStatus.NOT_RUN
+                res.user_message = (
+                    f"Тестовый вызов эксперимента {norm['type']} "
+                    f"успешно выполнен (поток {norm['stream']}). "
+                    "Использован TEST_ADAPTER. "
+                    "Реальный расчёт PVTP не выполнялся. "
+                    "Инженерная оценка: NOT_ASSESSED."
+                )
+            else:
+                res.user_message = (
+                    f"Эксперимент {norm['type']} выполнен "
+                    f"(поток {norm['stream']}). "
+                    "Инженерная оценка точности не выполнялась: "
+                    "допуск не утверждён (NOT_ASSESSED)."
+                )
 
     def _apply_changes(self, request, norm, res, trace):
         # ---- 9. запись в модель — только после подтверждения конкретного плана
