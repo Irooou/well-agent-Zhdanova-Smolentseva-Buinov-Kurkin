@@ -16,7 +16,7 @@ from src.agent.contracts import (
 )
 
 from src.agent.parser import parse_request
-from src.agent.loop import PVTAgent
+from src.agent.loop import PVTAgent, load_rules
 from src.agent.mcp_adapter import McpPVTPAdapter
 
 
@@ -109,6 +109,24 @@ def run(request, ctx=None) -> dict:
             "Запрос не соответствует схеме AgentRequest.",
         )
 
+    # Проверка исходного текста до обращения к LLM.
+    rules = load_rules()
+
+    user_text = request["user_text"].casefold()
+
+    for pattern in rules["injection_patterns"]:
+
+        if pattern.casefold() in user_text:
+
+            return failure(
+                request_id,
+                "REJECTED",
+                "INJECTED_INSTRUCTION_IGNORED",
+                "Обнаружена инструкция об обходе "
+                "ограничений агента. "
+                "Запрос отклонён, расчёт не запускался.",
+            )
+
     # Тестовый режим включается только явно.
     test_mode = (
         isinstance(ctx, dict)
@@ -177,7 +195,14 @@ def run(request, ctx=None) -> dict:
     agent = PVTAgent(
         adapter=McpPVTPAdapter(
             test_mode=test_mode
+        ),
+        store_path=(
+                ROOT / "logs" / (
+            "processed_test.json"
+            if test_mode
+            else "processed_real.json"
         )
+        ),
     )
 
     result = agent.handle(internal).to_dict()

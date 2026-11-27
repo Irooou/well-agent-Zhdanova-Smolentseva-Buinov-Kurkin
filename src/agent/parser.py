@@ -2,7 +2,6 @@
 
 import json
 import time
-import re
 
 from src.agent.schemas import ParsedRequest
 from datetime import datetime, timezone
@@ -80,18 +79,6 @@ def parse_request(
             json.loads(answer)
         ).model_dump()
 
-        initial_model_mentioned = re.search(
-            r"\bисходн\w*\s+модел\w*\b",
-            user_text,
-            flags=re.IGNORECASE,
-        )
-
-        if (
-                parsed["model_id"] is None
-                and initial_model_mentioned
-        ):
-            parsed["model_id"] = "исходная_модель"
-            record["model_id_restored"] = True
 
         # Идентификатор назначает программа, а не LLM.
         request = {

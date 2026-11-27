@@ -113,6 +113,53 @@ def to_internal_request(request: dict) -> dict:
         },
     }
 
+def load_trace(trace_id: str) -> list[dict]:
+
+    log_path = ROOT / "logs" / "trace_log.jsonl"
+
+    if not log_path.exists():
+        return []
+
+    with log_path.open(encoding="utf-8") as file:
+        lines = file.readlines()
+
+    for line in reversed(lines):
+
+        record = json.loads(line)
+
+        if record.get("trace_id") != trace_id:
+            continue
+
+        trace = []
+
+        for step in record.get("steps", []):
+
+            item = {
+                "trace_id": trace_id,
+                "step": (
+                    f"{step['component']}: "
+                    f"{step['action']}"
+                ),
+                "status": step["status"],
+            }
+
+            if isinstance(step.get("tool"), str):
+                item["tool"] = step["tool"]
+
+            if isinstance(step.get("arguments"), dict):
+                item["arguments"] = step["arguments"]
+
+            if step.get("response") is not None:
+                item["response"] = step["response"]
+
+            if step.get("duration_ms") is not None:
+                item["duration_ms"] = step["duration_ms"]
+
+            trace.append(item)
+
+        return trace
+
+    return []
 
 def to_external_result(result: dict) -> dict:
 
@@ -155,17 +202,29 @@ def to_external_result(result: dict) -> dict:
             ),
             "trace_id": result["trace_id"],
         })
+    message = result["user_message"]
+
+    if (
+            result.get("uses_test_adapter")
+            and status == "SUCCESS"
+    ):
+        message = (
+            "Тестовый вызов MCP успешно выполнен. "
+            "Использован TEST_ADAPTER. "
+            "Реальный расчёт PVTP не выполнялся. "
+            "Инженерная оценка: NOT_ASSESSED."
+        )
 
     external = {
         "request_id": result["request_id"],
         "trace_id": result["trace_id"],
         "status": status,
-        "message": result["user_message"],
+        "message": message,
         "errors": errors,
         "values": [],
         "sources": [],
         "pending_confirmation": None,
-        "trace": [],
+        "trace": load_trace(result["trace_id"]),
     }
 
     validate_result(external)
