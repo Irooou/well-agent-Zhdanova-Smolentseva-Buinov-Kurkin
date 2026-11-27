@@ -2,7 +2,9 @@
 
 import json
 import time
+import re
 
+from src.agent.schemas import ParsedRequest
 from datetime import datetime, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -74,12 +76,22 @@ def parse_request(
             if lines[-1].strip() == "```":
                 answer = "\n".join(lines[1:-1])
 
-        parsed = json.loads(answer)
+        parsed = ParsedRequest.model_validate(
+            json.loads(answer)
+        ).model_dump()
 
-        if not isinstance(parsed, dict):
-            raise ValueError(
-                "LLM должна вернуть JSON-объект."
-            )
+        initial_model_mentioned = re.search(
+            r"\bисходн\w*\s+модел\w*\b",
+            user_text,
+            flags=re.IGNORECASE,
+        )
+
+        if (
+                parsed["model_id"] is None
+                and initial_model_mentioned
+        ):
+            parsed["model_id"] = "исходная_модель"
+            record["model_id_restored"] = True
 
         # Идентификатор назначает программа, а не LLM.
         request = {
@@ -94,6 +106,7 @@ def parse_request(
             request["task_type"] = "out_of_scope"
 
         record["status"] = "SUCCESS"
+        record["parsed_request"] = request
 
         return request
 
