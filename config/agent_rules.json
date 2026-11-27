@@ -1,0 +1,61 @@
+{
+  "_comment": "Правила проверок агента (участник №4). Диапазоны, атмосферное давление, таймаут и число повторов — ПРЕДВАРИТЕЛЬНЫЕ значения команды (status NOT_CONFIRMED); по п. 4.3 ТЗ их подтверждает преподаватель.",
+
+  "task_types": ["run_experiment", "apply_model_changes"],
+  "common_required": ["request_id", "task_type", "model_id"],
+  "allowed_model_ids": ["исходная_модель"],
+  "_model_ids_comment": "адаптированная_модель.xlsx — преподавательский ориентир, алгоритму недоступна (п. 1.1 ТЗ)",
+
+  "experiments": {
+    "PSAT": {"required": ["temperature"]},
+    "CCE":  {"required": ["temperature", "pressure_steps"]},
+    "CVD":  {"required": ["temperature", "pressure_steps"]},
+    "SEP":  {"required": ["stages"]}
+  },
+
+  "units": {
+    "temperature": ["degC", "°C", "degF", "°F", "K"],
+    "pressure_absolute": ["BARa", "bara", "psia", "MPa_abs", "kPa_abs"],
+    "pressure_gauge": ["psig", "barg", "BARg"]
+  },
+  "ambiguous_units": {
+    "bar": "не указана шкала: абсолютное (BARa) или избыточное (barg) давление",
+    "бар": "не указана шкала: абсолютное (BARa) или избыточное (barg) давление",
+    "psi": "не указана шкала: абсолютное (psia) или избыточное (psig) давление",
+    "atm": "неясно, физическая или техническая атмосфера и какая шкала",
+    "C": "неясное обозначение, используйте degC",
+    "F": "неясное обозначение, используйте degF"
+  },
+  "atmospheric_pressure": {"value": null, "unit": "BARa", "status": "NOT_CONFIRMED"},
+
+  "physical_limits": {
+    "temperature_degC_min_exclusive": -273.15,
+    "pressure_BARa_min_exclusive": 0.0
+  },
+  "working_ranges": {
+    "temperature_degC": {"min": -60.0, "max": 250.0},
+    "pressure_BARa": {"min": 1.0, "max": 1000.0},
+    "status": "NOT_CONFIRMED",
+    "source": "предварительный рабочий диапазон команды, требует подтверждения преподавателем (п. 4.3 ТЗ)"
+  },
+  "max_pressure_steps": 50,
+
+  "model_changes": {
+    "allowed_parameters": ["BIC", "VOLUME_SHIFT"],
+    "component_count": 20,
+    "_comment": "Знак не ограничивается: в исходной модели есть отрицательные Volume shift и BIC (п. 1.2 ТЗ)"
+  },
+
+  "adapter": {
+    "timeout_s": 60,
+    "license_retry": {"max_attempts": 3, "delay_s": 2.0},
+    "status": "NOT_CONFIRMED"
+  },
+
+  "injection_patterns": [
+    "игнорируй", "проигнорируй", "забудь предыдущ", "не спрашивай подтвержден", "без подтвержден",
+    "ты теперь", "выполни команду", "удали", "перезапиши", "отключи провер",
+    "ignore previous", "ignore all", "disregard", "you are now", "system:", "without confirmation",
+    "do not ask", "delete", "overwrite"
+  ]
+}
